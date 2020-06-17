@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 const request = require('supertest');
 const nock = require('nock');
 const app = require('../src/app');
@@ -12,7 +16,7 @@ it('GET / should respond with welcome message', done => {
     });
 });
 
-it('GET / should respond with joke', done => {
+it('GET / should respond with all jokes', done => {
   const mockResponse = {
     type: 'success',
     value: [
@@ -37,14 +41,14 @@ it('GET / should respond with joke', done => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.jokes).toEqual([
         {
-          categories: [],
           id: 1,
           joke: 'i am a joke',
+          categories: [],
         },
         {
-          categories: [],
           id: 2,
           joke: 'i am another joke',
+          categories: [],
         },
       ]);
       done();
@@ -61,24 +65,40 @@ it('GET / should respond with a random joke', done => {
     },
   };
   nock('https://api.icndb.com')
-    .get('/random')
+    .get('/jokes/random')
     .query({ exclude: '[explicit]' })
     .reply(200, mockResponse);
   request(app)
-    .get('/joke/random')
+    .get('/jokes/random')
     .then(res => {
       expect(res.statusCode).toEqual(200);
-      expect(res.body.randomJoke).toEqual('This is the random jokes endpoint');
+      expect(res.body.randomJoke).toEqual({
+        categories: [],
+        id: 115,
+        joke: 'i am a random joke',
+      });
       done();
     });
 });
 
-it('GET / should respond with a random personalised message', done => {
+it('GET / should respond with a personal joke', done => {
+  const mockResponse = {
+    type: 'success',
+    value: {
+      id: 141,
+      joke: 'random joke about manchester codes',
+      categories: [],
+    },
+  };
+  nock('https://api.icndb.com')
+    .get('/jokes/random')
+    .query({ exclude: '[explicit]', firstName: 'Lady', lastName: 'Marmalade' })
+    .reply(200, mockResponse);
   request(app)
-    .get('/joke/random/personal/Szabina/Kovacs')
+    .get('/jokes/random/personal/Lady/Marmalade')
     .then(res => {
       expect(res.statusCode).toEqual(200);
-      expect(res.body.message).toEqual('This is the personalised random joke endpoint');
+      expect(res.body.personalJoke).toEqual(mockResponse.value);
       done();
     });
 });
