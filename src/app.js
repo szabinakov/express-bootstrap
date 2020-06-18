@@ -5,7 +5,7 @@ const { randomJokesController } = require('./controller.js');
 const { personalJokesController } = require('./controller.js');
 
 const app = express();
-
+app.use(express.static('public'));
 app.get('/', mainController);
 
 app.get('/jokes', jokesController);
